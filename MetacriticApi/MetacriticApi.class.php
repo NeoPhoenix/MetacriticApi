@@ -22,13 +22,13 @@
 			@$dom->loadHTMLFile($url);
 			$xpath = new DOMXPath($dom);
 			
-			//fetch meta- and userscore
+			//meta- and userscore
 			$this->metascore	= $xpath->query("//span[@itemprop='ratingValue']");
 			$this->metascore	= $this->metascore->length!=0?intval($this->metascore->item(0)->childNodes->item(0)->nodeValue):0;
 			$this->userscore	= $xpath->query("//div[@class='userscore_wrap feature_userscore']");
 			$this->userscore	= $this->userscore->length!=0?floatval($this->userscore->item(0)->childNodes->item(3)->nodeValue):0.0;
 			
-			//fetch metascore distribution
+			//metascore distribution
 			$distributions		= $xpath->query("(//div[@class='score_distribution'])[1]//span[@class='count']");
 			if($distributions->length == 3)
 			{
@@ -36,13 +36,31 @@
 				foreach($distributions as $distribution) $this->metascore_d[] = intval($distribution->childNodes->item(0)->nodeValue);
 			}
 			
-			//fetch userscore distribution
+			//userscore distribution
 			$distributions		= $xpath->query("(//div[@class='score_distribution'])[2]//span[@class='count']");
 			if($distributions->length == 3)
 			{
 				$this->userscore_d = array();
 				foreach($distributions as $distribution) $this->userscore_d[] = intval($distribution->childNodes->item(0)->nodeValue);
 			}
+			
+			//fetch critic's reviews
+			$reviews			= $xpath->query("//li[contains(@class,'review critic_review')]//div[@class='review_content']");
+			if (!is_null($reviews))
+			{
+				foreach($reviews as $review)
+				{
+					$tmp = array();
+					$tmp['author']		= $xpath->query(".//div[@class='review_stats']//div[@class='author']//a",$review);
+					if($tmp['author']->length)	$tmp['author'] = $tmp['author']->item(0)->childNodes->item(0)->nodeValue;
+					else						$tmp['author'] = $xpath->query(".//div[@class='review_stats']//div[@class='author']//span",$review)->item(0)->childNodes->item(0)->nodeValue;
+					$tmp['source']		= $xpath->query(".//div[@class='review_stats']//div[@class='source']//a",$review)->item(0)->childNodes->item(0)->nodeValue;
+					$tmp['source_url']	= $xpath->query(".//li[@class='review_action full_review']//a/@href",$review)->item(0)->childNodes->item(0)->nodeValue;
+					$tmp['score']		= intval($xpath->query(".//div[@class='review_stats']//div[@class='review_grade has_author']//div",$review)->item(0)->childNodes->item(0)->nodeValue);
+					$tmp['review']		= $xpath->query(".//div[@class='review_body']",$review)->item(0)->childNodes->item(0)->nodeValue;
+					$this->reviews[] = array($tmp['source'],$tmp['source_url'],$tmp['author'],$tmp['score'],$tmp['review']);
+				}
+			}			
 		}
 		
 		private function strEncode($string)
