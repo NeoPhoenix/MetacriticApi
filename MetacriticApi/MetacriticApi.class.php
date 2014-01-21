@@ -28,55 +28,45 @@
 			$this->userscore	= $this->userscore->length!=0?floatval($this->userscore->item(0)->childNodes->item(3)->nodeValue):0.0;
 			
 			$distributions = $xpath->query("(//div[@class='score_distribution'])[1]//span[@class='count']");
-			if($distributions->length == 3)
-			{
+			if($distributions->length == 3) {
 				$this->metascore_d = array();
 				foreach($distributions as $distribution) $this->metascore_d[] = intval($distribution->childNodes->item(0)->nodeValue);
 			}
 			
 			$distributions = $xpath->query("(//div[@class='score_distribution'])[2]//span[@class='count']");
-			if($distributions->length == 3)
-			{
+			if($distributions->length == 3) {
 				$this->userscore_d = array();
 				foreach($distributions as $distribution) $this->userscore_d[] = intval($distribution->childNodes->item(0)->nodeValue);
 			}
 			
 			$reviews = $xpath->query("//li[contains(@class,'review critic_review')]//div[@class='review_content']");
-			if (!is_null($reviews))
-			{
-				foreach($reviews as $review)
-				{
-					$tmp = array('source'=>'Unknown','source_url'=>'','author'=>'Unknown','score'=>0,'review'='');
-					$tmp['author']		= $xpath->query(".//div[@class='review_stats']//div[@class='author']//a",$review);
+			if (!is_null($reviews)) {
+				foreach($reviews as $review) {
+					$tmp = array('author'=>'Unknown','score'=>0,'review'=>'');
+					$tmp['author']		= $xpath->query(".//div[@class='review_stats']//div[@class='source']//a",$review);
 					if($tmp['author']->length)	$tmp['author'] = $tmp['author']->item(0)->childNodes->item(0)->nodeValue;
-					else						$tmp['author'] = $xpath->query(".//div[@class='review_stats']//div[@class='author']//span",$review)->item(0)->childNodes->item(0)->nodeValue;
-					$tmp['source']		= $xpath->query(".//div[@class='review_stats']//div[@class='source']//a",$review)->item(0)->childNodes->item(0)->nodeValue;
-					$tmp['source_url']	= $xpath->query(".//li[@class='review_action full_review']//a/@href",$review)->item(0)->childNodes->item(0)->nodeValue;
-					$tmp['score']		= intval($xpath->query(".//div[@class='review_stats']//div[@class='review_grade has_author']//div",$review)->item(0)->childNodes->item(0)->nodeValue);
+					else						$tmp['author'] = $xpath->query(".//div[@class='review_stats']//div[@class='source']//span",$review)->item(0)->childNodes->item(0)->nodeValue;
+					$tmp['score']		= intval($xpath->query(".//div[@class='review_stats']//div[contains(@class,'review_grade')]//div",$review)->item(0)->childNodes->item(0)->nodeValue);
 					$tmp['review']		= $xpath->query(".//div[@class='review_body']",$review)->item(0)->childNodes->item(0)->nodeValue;
-					$this->critic_reviews[] = array($tmp['source'],$tmp['source_url'],$tmp['author'],$tmp['score'],$tmp['review']);
+					$this->critic_reviews[] = array('author'=>$tmp['author'],'score'=>$tmp['score'],'review'=>$tmp['review']);
 				}
 			}
 			
 			$reviews = $xpath->query("//li[contains(@class,'review user_review')]//div[@class='review_content']");
-			if (!is_null($reviews))
-			{
-				foreach($reviews as $review)
-				{
-					$tmp = array('author'=>'Unknown','score'=>0,'review'='');
+			if (!is_null($reviews)) {
+				foreach($reviews as $review) {
+					$tmp = array('author'=>'Unknown','score'=>0,'review'=>'');
 					$tmp['author']		= $xpath->query(".//div[@class='review_critic']//div[@class='name']//a",$review);
 					if($tmp['author']->length)	$tmp['author'] = $tmp['author']->item(0)->childNodes->item(0)->nodeValue;
 					else						$tmp['author'] = $xpath->query(".//div[@class='review_critic']//div[@class='name']//span",$review)->item(0)->childNodes->item(0)->nodeValue;
 					$tmp['score']		= intval($xpath->query(".//div[@class='review_stats']//div[@class='review_grade']//div",$review)->item(0)->childNodes->item(0)->nodeValue);
 					$tmp['review']		= $xpath->query(".//div[@class='review_body']//span[1]",$review)->item(0)->childNodes->item(0)->nodeValue;
-					$this->user_reviews[] = array($tmp['author'],$tmp['score'],$tmp['review']);
+					$this->critic_reviews[] = array('author'=>$tmp['author'],'score'=>$tmp['score'],'review'=>$tmp['review']);
 				}
-			}
-			
+			}			
 		}
 		
-		private function strEncode($string)
-		{
+		private function strEncode($string) {
 			$string = str_replace(' ','-',$string);
 			$chars = array_diff(range(chr(0),chr(255)),array_merge(range(0,9),array('-'),range(chr(97),chr(122))/*a-z*/,range(chr(65),chr(90))/*A-Z*/));
 			$string = str_replace($chars,'',$string);
