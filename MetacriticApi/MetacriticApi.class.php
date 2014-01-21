@@ -2,8 +2,12 @@
 	
 	class MetacriticApi
 	{
-		public $metascore = 0;
-		public $userscore = 0;
+		public $metascore	= 0;
+		public $userscore	= 0;
+		public $metascore_d	= array(0=>0,1=>0,2=>0);
+		public $userscore_d = array(0=>0,1=>0,2=>0);
+		public $meta_reviews= array();
+		public $user_reviews= array();
 		
 		public function __construct($type,array $product)
 		{
@@ -17,10 +21,28 @@
 			$dom = new DOMDocument();
 			@$dom->loadHTMLFile($url);
 			$xpath = new DOMXPath($dom);
-			$this->metascore = $xpath->query("//span[@itemprop='ratingValue']");
-			$this->metascore = $this->metascore->length!=0?intval($this->metascore->item(0)->childNodes->item(0)->nodeValue):0;
-			$this->userscore = $xpath->query("//div[@class='userscore_wrap feature_userscore']");
-			$this->userscore = $this->userscore->length!=0?floatval($this->userscore->item(0)->childNodes->item(3)->nodeValue):0;
+			
+			//fetch meta- and userscore
+			$this->metascore	= $xpath->query("//span[@itemprop='ratingValue']");
+			$this->metascore	= $this->metascore->length!=0?intval($this->metascore->item(0)->childNodes->item(0)->nodeValue):0;
+			$this->userscore	= $xpath->query("//div[@class='userscore_wrap feature_userscore']");
+			$this->userscore	= $this->userscore->length!=0?floatval($this->userscore->item(0)->childNodes->item(3)->nodeValue):0.0;
+			
+			//fetch metascore distribution
+			$distributions		= $xpath->query("(//div[@class='score_distribution'])[1]//span[@class='count']");
+			if($distributions->length == 3)
+			{
+				$this->metascore_d = array();
+				foreach($distributions as $distribution) $this->metascore_d[] = intval($distribution->childNodes->item(0)->nodeValue);
+			}
+			
+			//fetch userscore distribution
+			$distributions		= $xpath->query("(//div[@class='score_distribution'])[2]//span[@class='count']");
+			if($distributions->length == 3)
+			{
+				$this->userscore_d = array();
+				foreach($distributions as $distribution) $this->userscore_d[] = intval($distribution->childNodes->item(0)->nodeValue);
+			}
 		}
 		
 		private function strEncode($string)
